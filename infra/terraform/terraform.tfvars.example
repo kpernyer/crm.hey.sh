@@ -1,0 +1,11 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+project_id     = "your-gcp-project-id"
+project_name   = "crm-hey-sh"
+region         = "us-central1"
+zone           = "us-central1-a"
+environment    = "prod"
+machine_type   = "e2-medium"
+node_count     = 2
+max_node_count = 5
+preemptible    = false

@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crm-ingress
+  namespace: crm
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "crm-ip"
+    networking.gke.io/managed-certificates: "crm-certificate"
+spec:
+  rules:
+    - host: crm.hey.sh
+      http:
+        paths:
+          - path: /api/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: crm-backend
+                port:
+                  number: 80
+          - path: /lp/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: crm-backend
+                port:
+                  number: 80
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: crm-frontend
+                port:
+                  number: 80
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: crm-certificate
+  namespace: crm
+spec:
+  domains:
+    - crm.hey.sh

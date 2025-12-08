@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package crm.notification;
+
+option go_package = "github.com/hey-sh/crm/proto/notification";
+
+// Notification Service - Internal gRPC service for notifications
+service NotificationService {
+  // Send email notification
+  rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+
+  // Send batch emails
+  rpc SendBatchEmails(SendBatchEmailsRequest) returns (SendBatchEmailsResponse);
+
+  // Send push notification (mobile)
+  rpc SendPushNotification(SendPushRequest) returns (SendPushResponse);
+
+  // Send webhook
+  rpc SendWebhook(SendWebhookRequest) returns (SendWebhookResponse);
+}
+
+message SendEmailRequest {
+  string to_email = 1;
+  string to_name = 2;
+  string subject = 3;
+  string body_html = 4;
+  string body_text = 5;
+  string from_email = 6;
+  string from_name = 7;
+  string reply_to = 8;
+  map<string, string> headers = 9;
+  string campaign_id = 10;
+  string contact_id = 11;
+}
+
+message SendEmailResponse {
+  bool success = 1;
+  string message_id = 2;
+  string error = 3;
+}
+
+message SendBatchEmailsRequest {
+  repeated SendEmailRequest emails = 1;
+}
+
+message SendBatchEmailsResponse {
+  int32 total = 1;
+  int32 successful = 2;
+  int32 failed = 3;
+  repeated BatchEmailResult results = 4;
+}
+
+message BatchEmailResult {
+  string to_email = 1;
+  bool success = 2;
+  string message_id = 3;
+  string error = 4;
+}
+
+message SendPushRequest {
+  string user_id = 1;
+  string title = 2;
+  string body = 3;
+  map<string, string> data = 4;
+  string badge = 5;
+  string sound = 6;
+}
+
+message SendPushResponse {
+  bool success = 1;
+  string notification_id = 2;
+  string error = 3;
+}
+
+message SendWebhookRequest {
+  string url = 1;
+  string method = 2; // POST, PUT
+  string payload_json = 3;
+  map<string, string> headers = 4;
+  int32 timeout_ms = 5;
+}
+
+message SendWebhookResponse {
+  bool success = 1;
+  int32 status_code = 2;
+  string response_body = 3;
+  string error = 4;
+}

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: surrealdb
+  namespace: crm
+spec:
+  serviceName: surrealdb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: surrealdb
+  template:
+    metadata:
+      labels:
+        app: surrealdb
+    spec:
+      containers:
+        - name: surrealdb
+          image: surrealdb/surrealdb:latest
+          args:
+            - start
+            - --log
+            - info
+            - --user
+            - $(SURREAL_USER)
+            - --pass
+            - $(SURREAL_PASS)
+            - file:/data/database.db
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SURREAL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: crm-secrets
+                  key: surrealdb-user
+            - name: SURREAL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: crm-secrets
+                  key: surrealdb-pass
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: surrealdb
+  namespace: crm
+spec:
+  selector:
+    app: surrealdb
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  clusterIP: None

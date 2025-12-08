@@ -1,0 +1,90 @@
+# Frontend Justfile (Next.js/React with Bun)
+
+set dotenv-load := true
+
+# List available recipes
+default:
+    @just --list
+
+# === BUILD ===
+
+# Build for production
+build: install
+    bun run build
+
+# === DEV ===
+
+# Start development server
+dev:
+    bun run dev
+
+# Start production server
+start:
+    bun run start
+
+# === TEST ===
+
+# Run tests (add test script to package.json when ready)
+test:
+    @echo "No tests configured yet - add 'test' script to package.json"
+
+# === CHECK ===
+
+# Run linting and type checking
+check: lint type-check
+
+# Run ESLint
+lint:
+    bun run lint
+
+# Run TypeScript type checking
+type-check:
+    bun run type-check
+
+# === UTILITIES ===
+
+# Format code with prettier
+fmt:
+    bun x prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
+
+# Check formatting
+fmt-check:
+    bun x prettier --check "src/**/*.{ts,tsx,js,jsx,json,css}"
+
+# Clean build artifacts
+clean:
+    rm -rf .next
+    rm -rf node_modules/.cache
+
+# Deep clean (including node_modules)
+clean-all: clean
+    rm -rf node_modules
+    rm -f bun.lockb
+
+# Install dependencies
+install:
+    bun install
+
+# Update dependencies
+update:
+    bun update
+
+# === DOCKER ===
+
+# Build docker image
+docker-build:
+    docker build -t crm-frontend:latest .
+
+# Run in docker
+docker-run:
+    docker run -p 3001:3000 crm-frontend:latest
+
+# === ANALYSIS ===
+
+# Analyze bundle size
+analyze:
+    ANALYZE=true bun run build
+
+# Show outdated dependencies
+outdated:
+    bun outdated

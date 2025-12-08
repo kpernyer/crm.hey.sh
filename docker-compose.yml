@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # SurrealDB
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    command: start --log trace --user root --pass root
+    ports:
+      - "8000:8000"
+    volumes:
+      - surrealdb_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SURREALDB_URL=surrealdb:8000
+      - SURREALDB_NAMESPACE=crm
+      - SURREALDB_DATABASE=main
+      - SURREALDB_USER=root
+      - SURREALDB_PASS=root
+      - RUST_LOG=info
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+
+  # Frontend Web
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+    depends_on:
+      - backend
+
+volumes:
+  surrealdb_data:

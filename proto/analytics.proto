@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package crm.analytics;
+
+option go_package = "github.com/hey-sh/crm/proto/analytics";
+
+// Analytics Service - Internal gRPC service for analytics operations
+service AnalyticsService {
+  // Get campaign analytics
+  rpc GetCampaignAnalytics(GetCampaignAnalyticsRequest) returns (GetCampaignAnalyticsResponse);
+
+  // Get contact analytics
+  rpc GetContactAnalytics(GetContactAnalyticsRequest) returns (GetContactAnalyticsResponse);
+
+  // Get funnel analytics
+  rpc GetFunnelAnalytics(GetFunnelAnalyticsRequest) returns (GetFunnelAnalyticsResponse);
+
+  // Track event
+  rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse);
+}
+
+message GetCampaignAnalyticsRequest {
+  string campaign_id = 1;
+  string start_date = 2; // ISO 8601 date
+  string end_date = 3;   // ISO 8601 date
+}
+
+message GetCampaignAnalyticsResponse {
+  string campaign_id = 1;
+  int64 total_contacts = 2;
+  int64 emails_sent = 3;
+  int64 emails_opened = 4;
+  int64 emails_clicked = 5;
+  int64 landing_page_visits = 6;
+  int64 conversions = 7;
+  double open_rate = 8;
+  double click_rate = 9;
+  double conversion_rate = 10;
+  repeated DailyMetric daily_metrics = 11;
+}
+
+message DailyMetric {
+  string date = 1;
+  int64 emails_sent = 2;
+  int64 opens = 3;
+  int64 clicks = 4;
+  int64 conversions = 5;
+}
+
+message GetContactAnalyticsRequest {
+  string time_range = 1; // e.g., "7d", "30d", "90d"
+}
+
+message GetContactAnalyticsResponse {
+  int64 total_contacts = 1;
+  int64 new_contacts = 2;
+  map<string, int64> by_status = 3;
+  double avg_engagement_score = 4;
+  repeated TopContact top_engaged = 5;
+}
+
+message TopContact {
+  string id = 1;
+  string name = 2;
+  double engagement_score = 3;
+}
+
+message GetFunnelAnalyticsRequest {
+  string campaign_id = 1; // optional, for campaign-specific funnel
+  string time_range = 2;
+}
+
+message GetFunnelAnalyticsResponse {
+  repeated FunnelStage stages = 1;
+  double overall_conversion_rate = 2;
+}
+
+message FunnelStage {
+  string name = 1;
+  int64 count = 2;
+  double percentage = 3;
+  double conversion_from_previous = 4;
+}
+
+message TrackEventRequest {
+  string event_type = 1;
+  string contact_id = 2;
+  string campaign_id = 3;
+  map<string, string> properties = 4;
+}
+
+message TrackEventResponse {
+  bool success = 1;
+  string event_id = 2;
+}

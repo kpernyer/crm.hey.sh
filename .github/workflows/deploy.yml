@@ -1,0 +1,58 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GKE_CLUSTER: crm-hey-sh-cluster
+  GKE_ZONE: us-central1-a
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Update image tags
+        run: |
+          cd infra/k8s
+          sed -i 's|gcr.io/PROJECT_ID|gcr.io/${{ secrets.GCP_PROJECT_ID }}|g' *.yaml
+          sed -i 's|:latest|:${{ github.sha }}|g' *.yaml
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f infra/k8s/namespace.yaml
+          kubectl apply -f infra/k8s/secrets.yaml || true
+          kubectl apply -f infra/k8s/surrealdb-statefulset.yaml
+          kubectl apply -f infra/k8s/backend-deployment.yaml
+          kubectl apply -f infra/k8s/frontend-deployment.yaml
+          kubectl apply -f infra/k8s/ingress.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/crm-backend -n crm --timeout=300s
+          kubectl rollout status deployment/crm-frontend -n crm --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n crm
+          kubectl get services -n crm
+          kubectl get ingress -n crm

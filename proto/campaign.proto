@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package crm.campaign;
+
+option go_package = "github.com/hey-sh/crm/proto/campaign";
+
+// Campaign Service - Internal gRPC service for campaign operations
+service CampaignService {
+  // Generate campaign assets using AI
+  rpc GenerateAssets(GenerateAssetsRequest) returns (GenerateAssetsResponse);
+
+  // Schedule campaign execution
+  rpc ScheduleCampaign(ScheduleCampaignRequest) returns (ScheduleCampaignResponse);
+
+  // Execute campaign immediately
+  rpc ExecuteCampaign(ExecuteCampaignRequest) returns (ExecuteCampaignResponse);
+
+  // Get campaign status
+  rpc GetCampaignStatus(GetCampaignStatusRequest) returns (GetCampaignStatusResponse);
+}
+
+message GenerateAssetsRequest {
+  string campaign_id = 1;
+  string prompt = 2;
+  repeated AssetType asset_types = 3;
+}
+
+enum AssetType {
+  ASSET_TYPE_UNSPECIFIED = 0;
+  ASSET_TYPE_EMAIL = 1;
+  ASSET_TYPE_SOCIAL_POST = 2;
+  ASSET_TYPE_LANDING_PAGE = 3;
+  ASSET_TYPE_EVENT_INVITE = 4;
+}
+
+message GenerateAssetsResponse {
+  repeated GeneratedAsset assets = 1;
+}
+
+message GeneratedAsset {
+  string id = 1;
+  AssetType type = 2;
+  string content_json = 3;
+  string url = 4;
+}
+
+message ScheduleCampaignRequest {
+  string campaign_id = 1;
+  string scheduled_time = 2; // ISO 8601 timestamp
+}
+
+message ScheduleCampaignResponse {
+  bool success = 1;
+  string message = 2;
+  string scheduled_time = 3;
+}
+
+message ExecuteCampaignRequest {
+  string campaign_id = 1;
+}
+
+message ExecuteCampaignResponse {
+  bool success = 1;
+  string message = 2;
+  string execution_id = 3;
+  repeated ChannelResult channel_results = 4;
+}
+
+message ChannelResult {
+  string channel = 1;
+  bool success = 2;
+  string message = 3;
+  int32 recipients_count = 4;
+}
+
+message GetCampaignStatusRequest {
+  string campaign_id = 1;
+}
+
+message GetCampaignStatusResponse {
+  string campaign_id = 1;
+  CampaignStatus status = 2;
+  CampaignMetrics metrics = 3;
+}
+
+enum CampaignStatus {
+  CAMPAIGN_STATUS_UNSPECIFIED = 0;
+  CAMPAIGN_STATUS_DRAFT = 1;
+  CAMPAIGN_STATUS_SCHEDULED = 2;
+  CAMPAIGN_STATUS_RUNNING = 3;
+  CAMPAIGN_STATUS_COMPLETED = 4;
+  CAMPAIGN_STATUS_PAUSED = 5;
+}
+
+message CampaignMetrics {
+  int32 total_recipients = 1;
+  int32 emails_sent = 2;
+  int32 emails_opened = 3;
+  int32 emails_clicked = 4;
+  int32 landing_page_visits = 5;
+  int32 conversions = 6;
+}
