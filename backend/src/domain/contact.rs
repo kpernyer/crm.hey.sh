@@ -461,7 +461,6 @@ impl ContactUpdater {
 
     /// Change status
     ///
-    /// YOUR IMPLEMENTATION:
     pub fn status(mut self, new_status: ContactStatus) -> DomainResult<Self> {
         // TODO: Implement this
         // Hint: Use self.contact.transition_status()

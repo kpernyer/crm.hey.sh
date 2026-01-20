@@ -1,132 +1,34 @@
-# Infrastructure Justfile (Terraform, Kubernetes, Docker)
+# Infrastructure Justfile (Terraform + Kubernetes)
 
 set dotenv-load := true
 
-# Default namespace
-k8s_namespace := "crm"
-
-# List available recipes
 default:
     @just --list
 
-# === DEPLOY ===
-
-# Deploy to development environment
-deploy-dev: k8s-apply-dev
-    @echo "Deployed to development"
-
-# Deploy to production environment
-deploy-prod: tf-apply k8s-apply-prod
-    @echo "Deployed to production"
-
-# === TERRAFORM ===
-
-# Initialize Terraform
-tf-init:
+# Install/init dependencies
+install:
     cd terraform && terraform init
 
-# Plan Terraform changes
-tf-plan:
-    cd terraform && terraform plan
+# Build (validate configs)
+build:
+    cd terraform && terraform validate
+    kubectl apply --dry-run=client -f k8s/
 
-# Apply Terraform changes
-tf-apply:
-    cd terraform && terraform apply
-
-# Destroy Terraform resources (dangerous!)
-tf-destroy:
-    cd terraform && terraform destroy
-
-# Show Terraform outputs
-tf-output:
-    cd terraform && terraform output
-
-# Validate Terraform configuration
-tf-validate:
+# Run tests (validate)
+test:
     cd terraform && terraform validate
 
-# Format Terraform files
-tf-fmt:
-    cd terraform && terraform fmt -recursive
+# Check configs
+check:
+    cd terraform && terraform fmt -check
+    cd terraform && terraform validate
 
-# === KUBERNETES ===
-
-# Apply all K8s manifests to dev
-k8s-apply-dev:
+# Deploy to environment (dev/prod)
+deploy env:
+    cd terraform && terraform apply -var="environment={{env}}"
     kubectl apply -f k8s/namespace.yaml
-    kubectl apply -f k8s/ -n {{k8s_namespace}}
+    kubectl apply -f k8s/ -n crm
 
-# Apply all K8s manifests to prod
-k8s-apply-prod:
-    kubectl apply -f k8s/namespace.yaml --context prod
-    kubectl apply -f k8s/ -n {{k8s_namespace}} --context prod
-
-# Delete all K8s resources
-k8s-delete:
-    kubectl delete -f k8s/ -n {{k8s_namespace}} --ignore-not-found
-
-# Get pod status
-k8s-status:
-    kubectl get pods -n {{k8s_namespace}}
-
-# Get all resources
-k8s-get-all:
-    kubectl get all -n {{k8s_namespace}}
-
-# View logs for a deployment
-k8s-logs deployment:
-    kubectl logs -f deployment/{{deployment}} -n {{k8s_namespace}}
-
-# Describe a pod
-k8s-describe pod:
-    kubectl describe pod {{pod}} -n {{k8s_namespace}}
-
-# Port forward backend
-k8s-forward-backend:
-    kubectl port-forward svc/crm-backend 3000:3000 -n {{k8s_namespace}}
-
-# Port forward frontend
-k8s-forward-frontend:
-    kubectl port-forward svc/crm-frontend 3001:3000 -n {{k8s_namespace}}
-
-# Restart a deployment
-k8s-restart deployment:
-    kubectl rollout restart deployment/{{deployment}} -n {{k8s_namespace}}
-
-# === DOCKER ===
-
-# Build all Docker images
-docker-build-all:
-    just ../backend/docker-build
-    just ../frontend/docker-build
-
-# Push all images to registry
-docker-push registry:
-    docker tag crm-backend:latest {{registry}}/crm-backend:latest
-    docker tag crm-frontend:latest {{registry}}/crm-frontend:latest
-    docker push {{registry}}/crm-backend:latest
-    docker push {{registry}}/crm-frontend:latest
-
-# === SECRETS ===
-
-# Create secrets from example (edit first!)
-k8s-create-secrets:
-    @echo "Make sure to edit k8s/secrets.yaml first!"
-    @test -f k8s/secrets.yaml || (echo "Copy k8s/secrets.yaml.example to k8s/secrets.yaml and edit it" && exit 1)
-    kubectl apply -f k8s/secrets.yaml -n {{k8s_namespace}}
-
-# === DATABASE ===
-
-# Port forward SurrealDB
-db-forward:
-    kubectl port-forward svc/surrealdb 8000:8000 -n {{k8s_namespace}}
-
-# === MONITORING ===
-
-# Watch pod status
-watch-pods:
-    watch -n 2 kubectl get pods -n {{k8s_namespace}}
-
-# Show resource usage
-resources:
-    kubectl top pods -n {{k8s_namespace}}
+# Clean (destroy resources - dangerous!)
+clean:
+    @echo "Run 'terraform destroy' manually for safety"

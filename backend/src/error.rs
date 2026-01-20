@@ -3,8 +3,10 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
+use utoipa::ToSchema;
 
 use crate::domain::errors::DomainError;
 
@@ -30,6 +32,12 @@ pub enum AppError {
 
     #[error("Database error: {0}")]
     Database(#[from] surrealdb::Error),
+}
+
+#[derive(utoipa::ToSchema, Serialize)]
+pub struct ErrorResponse {
+    pub error: String,
+    pub status: u16,
 }
 
 impl From<DomainError> for AppError {
@@ -66,10 +74,10 @@ impl IntoResponse for AppError {
             AppError::Database(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
         };
 
-        let body = Json(json!({
-            "error": error_message,
-            "status": status.as_u16()
-        }));
+        let body = Json(ErrorResponse {
+            error: error_message,
+            status: status.as_u16(),
+        });
 
         (status, body).into_response()
     }

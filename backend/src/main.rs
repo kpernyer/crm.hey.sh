@@ -8,6 +8,10 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+// OpenAPI imports
+use utoipa::{OpenApi, Modify};
+use utoipa_swagger_ui::SwaggerUi;
+
 mod ai;
 mod config;
 mod db;
@@ -16,6 +20,7 @@ mod error;
 mod handlers;
 mod models;
 mod repositories;
+mod secrets;
 mod services;
 
 // Re-export domain types for use in library context
@@ -23,6 +28,28 @@ pub use domain::*;
 
 use db::Database;
 use services::ContactService;
+
+// OpenAPI Documentation
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        handlers::health::health_check,
+        handlers::contacts::list_contacts,
+        handlers::contacts::create_contact,
+    ),
+    components(
+        schemas(
+            models::ContactResponse,
+            models::CreateContactRequest,
+            models::ContactQuery,
+            error::ErrorResponse,
+        )
+    ),
+    tags(
+        (name = "CRM API", description = "CRM.HEY.SH API for contact and company management")
+    )
+)]
+struct ApiDoc;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -32,16 +59,22 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Load .env file first
+    dotenvy::dotenv().ok();
+
+    // Load configuration
+    let app_config = config::Config::from_env()
+        .map_err(|e| anyhow::anyhow!("Failed to load configuration: {}", e))?;
+
     // Initialize tracing
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(&app_config.logging.level)))
         .init();
 
-    dotenvy::dotenv().ok();
-
     // Initialize database
-    let db = Database::new().await?;
+    let db = Database::new(&app_config).await?;
     db.init_schema().await?;
     let db = Arc::new(db);
 
@@ -100,11 +133,12 @@ async fn main() -> Result<()> {
         .route("/api/analytics/campaign/:id", get(handlers::analytics::campaign_analytics))
         .route("/api/analytics/contacts", get(handlers::analytics::contacts_analytics))
         .route("/api/analytics/funnel", get(handlers::analytics::funnel_analytics))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let addr = "0.0.0.0:8080";
+    let addr = format!("{}:{}", app_config.server.host, app_config.server.port);
     tracing::info!("Starting CRM server on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;

@@ -1,107 +1,69 @@
-# CRM.hey.sh Monorepo Justfile
-# Orchestrates builds across all components
+# CRM.hey.sh - Root Justfile
+# Orchestrates all subdirectories
 
 set dotenv-load := true
 
-# List available recipes
+# Show available commands
 default:
     @just --list
 
-# === ALL ===
+# === CORE COMMANDS ===
+
+# Install all dependencies
+install:
+    just backend/install
+    just frontend/install
+    just mobile/install
 
 # Build everything
-build: build-backend build-frontend build-mobile
-    @echo "All components built successfully"
-
-# Test everything
-test: test-backend test-frontend test-mobile
-    @echo "All tests passed"
-
-# Check/lint everything
-check: check-backend check-frontend check-mobile
-    @echo "All checks passed"
-
-# Clean everything
-clean: clean-backend clean-frontend clean-mobile
-    @echo "All components cleaned"
-
-# === BACKEND ===
-
-# Build backend
-build-backend:
+build:
     just backend/build
-
-# Test backend
-test-backend:
-    just backend/test
-
-# Check backend
-check-backend:
-    just backend/check
-
-# Clean backend
-clean-backend:
-    just backend/clean
-
-# Run backend locally
-run-backend:
-    just backend/run
-
-# === FRONTEND ===
-
-# Build frontend
-build-frontend:
     just frontend/build
-
-# Test frontend
-test-frontend:
-    just frontend/test
-
-# Check frontend
-check-frontend:
-    just frontend/check
-
-# Clean frontend
-clean-frontend:
-    just frontend/clean
-
-# Run frontend dev server
-dev-frontend:
-    just frontend/dev
-
-# === MOBILE ===
-
-# Build mobile
-build-mobile:
     just mobile/build
 
-# Test mobile
-test-mobile:
+# Run all tests
+test:
+    just backend/test
+    just frontend/test
     just mobile/test
 
-# Check mobile
-check-mobile:
+# Run linting and type checks
+check:
+    just backend/check
+    just frontend/check
     just mobile/check
 
-# Clean mobile
-clean-mobile:
-    just mobile/clean
+# Run full CI pipeline
+ci: install check test build
+    @echo "CI complete"
 
-# === INFRASTRUCTURE ===
+# === RUN ===
 
-# Deploy to development
-deploy-dev:
-    just infra/deploy-dev
+# Run backend server
+run:
+    just backend/run
 
-# Deploy to production
-deploy-prod:
-    just infra/deploy-prod
+# Run frontend dev server
+run-frontend:
+    just frontend/run
 
-# Start local docker environment
+# Run mobile (iOS simulator)
+run-mobile:
+    just mobile/run
+
+# Run all services locally
+run-all:
+    just docker-up
+    just backend/run &
+    just frontend/run
+
+# === DOCKER ===
+
+# Start docker services (SurrealDB)
 docker-up:
     docker-compose up -d
 
-# Stop local docker environment
+# Stop docker services
 docker-down:
     docker-compose down
 
@@ -109,37 +71,46 @@ docker-down:
 docker-logs:
     docker-compose logs -f
 
-# === CI/CD ===
+# === CLEAN ===
 
-# Run full CI pipeline (what CI runs)
-ci: check test build
-    @echo "CI pipeline complete"
+# Clean all build artifacts
+clean:
+    just backend/clean
+    just frontend/clean
+    just mobile/clean
 
-# Install all dependencies
-install: install-backend install-frontend install-mobile
-    @echo "All dependencies installed"
+# === LLM INTEGRATION ===
 
-install-backend:
-    just backend/install
+# Run MCP server (for Claude Desktop/Code)
+run-mcp:
+    cd backend/mcp-server && cargo run
 
-install-frontend:
-    just frontend/install
+# Build MCP server
+build-mcp:
+    cd backend/mcp-server && cargo build --release
 
-install-mobile:
-    just mobile/install
+# Install Python LLM tools dependencies
+install-llm-tools:
+    pip install -r backend/src/llm_tools/requirements.txt
 
-# === UTILITIES ===
+# Run LangChain agent example
+run-langchain-agent:
+    python backend/src/llm_tools/examples/langchain_agent.py
 
-# Format all code
-fmt: fmt-backend fmt-frontend
-    @echo "All code formatted"
+# Run Claude tool use example
+run-claude-tools:
+    python backend/src/llm_tools/examples/claude_tools.py
 
-fmt-backend:
-    just backend/fmt
+# Run OpenAI function calling example
+run-openai-functions:
+    python backend/src/llm_tools/examples/openai_functions.py
 
-fmt-frontend:
-    just frontend/fmt
+# === DEPLOY ===
 
-# Generate protobuf code
-proto:
-    just backend/proto
+# Deploy to dev environment
+deploy-dev:
+    just infra/deploy dev
+
+# Deploy to prod environment
+deploy-prod:
+    just infra/deploy prod

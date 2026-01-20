@@ -1,0 +1,15 @@
+# Core dependencies
+requests>=2.31.0
+
+# LangChain (optional - for agent integration)
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-anthropic>=0.1.0  # For Claude
+langchain-openai>=0.1.0     # For GPT-4
+
+# Direct API usage (optional - pick one or both)
+anthropic>=0.18.0           # For Claude tool use
+openai>=1.12.0              # For OpenAI function calling
+
+# Development
+pydantic>=2.0.0

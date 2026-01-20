@@ -8,6 +8,7 @@ import ContactsScreen from '../screens/ContactsScreen';
 import ContactDetailScreen from '../screens/ContactDetailScreen';
 import EventsScreen from '../screens/EventsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -49,6 +50,9 @@ export function RootNavigator() {
             case 'Notifications':
               iconName = 'bell';
               break;
+            case 'Pro':
+              iconName = 'star';
+              break;
             default:
               iconName = 'circle';
           }
@@ -67,6 +71,7 @@ export function RootNavigator() {
       />
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} />
+      <Tab.Screen name="Pro" component={SubscriptionScreen} />
     </Tab.Navigator>
   );
 }

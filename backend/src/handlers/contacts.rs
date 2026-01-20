@@ -22,6 +22,17 @@ use crate::AppState;
 /// List contacts with optional filters
 ///
 /// GET /api/contacts?limit=50&offset=0&status=lead&search=john
+#[utoipa::path(
+    get,
+    path = "/api/contacts",
+    params(ContactQuery),
+    responses(
+        (status = 200, description = "List of contacts", body = Vec<ContactResponse>),
+        (status = 400, description = "Bad request", body = ErrorResponse),
+        (status = 401, description = "Unauthorized", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    )
+)]
 pub async fn list_contacts(
     State(state): State<AppState>,
     Query(query): Query<ContactQuery>,
@@ -45,6 +56,18 @@ pub async fn list_contacts(
 ///
 /// POST /api/contacts
 /// Body: { first_name, last_name, email, phone?, linkedin_url?, tags?, status?, company_id? }
+#[utoipa::path(
+    post,
+    path = "/api/contacts",
+    request_body = CreateContactRequest,
+    responses(
+        (status = 201, description = "Contact created", body = ContactResponse),
+        (status = 400, description = "Bad request", body = ErrorResponse),
+        (status = 401, description = "Unauthorized", body = ErrorResponse),
+        (status = 409, description = "Conflict", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    )
+)]
 pub async fn create_contact(
     State(state): State<AppState>,
     Json(req): Json<CreateContactRequest>,

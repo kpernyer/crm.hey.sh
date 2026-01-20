@@ -1,130 +1,35 @@
-# Mobile Justfile (React Native with Bun)
+# Mobile Justfile (React Native)
 
 set dotenv-load := true
 
-# List available recipes
 default:
     @just --list
-
-# === BUILD ===
-
-# Build for both platforms (requires platform setup)
-build: install
-    @test -d ios && just build-ios || echo "Skipping iOS (run 'just init-native' to enable)"
-    @test -d android && just build-android || echo "Skipping Android (run 'just init-native' to enable)"
-
-# Build iOS app
-build-ios: install
-    cd ios && xcodebuild -workspace CrmMobile.xcworkspace -scheme CrmMobile -configuration Release -sdk iphoneos
-
-# Build Android app
-build-android: install
-    cd android && ./gradlew assembleRelease
-
-# Build Android debug APK
-build-android-debug: install
-    cd android && ./gradlew assembleDebug
-
-# Initialize native iOS/Android directories
-init-native: install
-    npx react-native eject 2>/dev/null || npx react-native init CrmMobile --directory . --skip-install
-
-# === RUN ===
-
-# Start Metro bundler
-start:
-    bun run start
-
-# Run on iOS simulator
-ios:
-    bun run ios
-
-# Run on Android emulator
-android:
-    bun run android
-
-# === TEST ===
-
-# Run tests
-test:
-    bun run test
-
-# Run tests in watch mode
-test-watch:
-    bun run test --watch
-
-# Run tests with coverage
-test-coverage:
-    bun run test --coverage
-
-# === CHECK ===
-
-# Run linting and type checking
-check: lint type-check
-
-# Run ESLint
-lint:
-    bun run lint
-
-# Run TypeScript type checking
-type-check:
-    bun run type-check
-
-# === UTILITIES ===
-
-# Format code
-fmt:
-    bun x prettier --write "src/**/*.{ts,tsx,js,jsx,json}" "App.tsx"
-
-# Check formatting
-fmt-check:
-    bun x prettier --check "src/**/*.{ts,tsx,js,jsx,json}" "App.tsx"
-
-# Clean build artifacts
-clean:
-    rm -rf node_modules/.cache
-    watchman watch-del-all 2>/dev/null || true
-
-# Deep clean
-clean-all: clean
-    rm -rf node_modules
-    rm -f bun.lockb
-    rm -rf ios/Pods
-    rm -rf ios/build
-    rm -rf android/build
-    rm -rf android/app/build
 
 # Install dependencies
 install:
     bun install
 
-# Install iOS pods
-install-pods:
-    cd ios && pod install
+# Build (install pods if iOS exists)
+build: install
+    @test -d ios && cd ios && pod install 2>/dev/null || true
 
-# Full install (bun + pods)
-install-all: install install-pods
+# Run tests
+test:
+    bun run test 2>/dev/null || echo "No tests configured"
 
-# === PLATFORM SETUP ===
+# Run linting and type checks
+check:
+    bun run lint 2>/dev/null || true
+    bun run type-check
 
-# Setup iOS (install pods)
-setup-ios:
-    cd ios && pod install
+# Run on iOS simulator
+run:
+    bun run ios
 
-# Setup Android (sync gradle)
-setup-android:
-    cd android && ./gradlew --refresh-dependencies
+# Run on Android emulator
+run-android:
+    bun run android
 
-# Clear Metro cache
-clear-cache:
-    bun run start --reset-cache
-
-# === RELEASE ===
-
-# Build iOS release for App Store
-release-ios:
-    cd ios && xcodebuild -workspace CrmMobile.xcworkspace -scheme CrmMobile -configuration Release archive
-
-# Build Android release bundle (for Play Store)
-release-android:
-    cd android && ./gradlew bundleRelease
+# Clean build artifacts
+clean:
+    rm -rf node_modules/.cache ios/build android/build

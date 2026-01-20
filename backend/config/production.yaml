@@ -1,0 +1,15 @@
+# Production Environment Configuration
+server:
+  port: 8080
+
+database:
+  surrealdb:
+    url: "surrealdb:8000"  # Using Docker service name
+    namespace: "crm"
+    database: "production"
+    username: "crm_user"
+    password: "${SURREALDB_PASSWORD}"  # Will be loaded from environment/secrets
+
+logging:
+  level: "INFO"
+  format: "json"

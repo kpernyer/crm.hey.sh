@@ -64,3 +64,5 @@ local.properties
 *.bak
 *.tmp
 .cache/
+backend/mcp-server/target/
+**/target/

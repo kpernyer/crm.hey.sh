@@ -1,9 +1,12 @@
 [package]
 name = "crm-backend"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "CRM.HEY.SH Backend - Rust/Axum API Server"
 authors = ["hey.sh team"]
+
+[workspace.metadata.rust-version]
+rust-version = "1.76"
 
 [dependencies]
 # Web framework
@@ -12,12 +15,25 @@ tokio = { version = "1", features = ["full"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors", "trace"] }
 
+# OpenAPI
+utoipa = { version = "4", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "6", features = ["axum"] }
+
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+# Configuration
+config = { version = "0.14", features = ["yaml"] }
+
 # Database
-surrealdb = "1"
+surrealdb = { version = "1", features = ["protocol-http"] }
+
+# Secret management (optional)
+# googleapis-tonic-google-cloud-secret-... would be the actual crate for GCP
+# Using generic secret-vault crate instead for broader compatibility
+secret-vault = { version = "1", optional = true }
+vault = { version = "10", optional = true }
 
 # Authentication
 jsonwebtoken = "9"

@@ -1,0 +1,14 @@
+# Development Environment Configuration
+server:
+  port: 8080
+
+database:
+  surrealdb:
+    url: "localhost:8000"
+    namespace: "crm_dev"
+    database: "main"
+    username: "root"
+    password: "root"
+
+logging:
+  level: "DEBUG"

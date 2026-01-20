@@ -1,0 +1,23 @@
+# Base CRM Configuration
+server:
+  port: 8080
+  host: "0.0.0.0"
+
+database:
+  surrealdb:
+    url: "localhost:8000"
+    namespace: "crm"
+    database: "main"
+    username: "root"
+    password: "root"
+    # Connection timeout in seconds
+    timeout: 30
+
+# JWT configuration
+jwt:
+  secret: "change-this-in-production"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "text"

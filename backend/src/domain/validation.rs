@@ -227,11 +227,11 @@ pub fn validate_company_domain(domain: Option<&str>) -> DomainResult<()> {
             return value;
         }
 
-        let at_least_one_dot = !d.contains('.');
+        let no_dot = !d.contains('.');
         let tld_too_short = d.split('.').last().unwrap().len() < 2;
         let tld_too_long = d.split('.').last().unwrap().len() > 10;
 
-        if at_least_one_dot || tld_too_short || tld_too_long {
+        if no_dot || tld_too_short || tld_too_long {
             return Err(DomainError::InvalidField {
                 field: "company_domain".to_string(),
                 reason: "Company domain must have at least one dot and a valid TLD".to_string(),

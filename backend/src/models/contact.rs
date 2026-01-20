@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ContactStatus {
     Lead,
@@ -12,7 +13,7 @@ pub enum ContactStatus {
     Other,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Contact {
     pub id: Option<Thing>,
     pub first_name: String,
@@ -28,7 +29,7 @@ pub struct Contact {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateContactRequest {
     pub first_name: String,
     pub last_name: String,
@@ -40,7 +41,7 @@ pub struct CreateContactRequest {
     pub company_id: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateContactRequest {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -53,7 +54,8 @@ pub struct UpdateContactRequest {
     pub company_id: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
+#[derive(utoipa::IntoParams)]
 pub struct ContactQuery {
     pub search: Option<String>,
     pub status: Option<ContactStatus>,
@@ -63,7 +65,7 @@ pub struct ContactQuery {
     pub offset: Option<u32>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ContactResponse {
     pub id: String,
     pub first_name: String,

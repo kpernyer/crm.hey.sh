@@ -2,99 +2,42 @@
 
 set dotenv-load := true
 
-# List available recipes
-default:
-    @just --list
+default: fmt lint test
 
-# === BUILD ===
+# Format the code
+fmt:
+    cargo fmt
 
-# Build the backend in debug mode
-build: install
-    cargo build
-
-# Build the backend in release mode
-build-release:
-    cargo build --release
-
-# === TEST ===
+# Lint the code
+lint:
+    cargo clippy -- -D warnings
 
 # Run all tests
 test:
     cargo test
 
-# Run tests with output
-test-verbose:
-    cargo test -- --nocapture
+# Run the server
+run:
+    cargo run --bin crm-server
 
-# Run tests matching a pattern
-test-match pattern:
-    cargo test {{pattern}}
+# Build the project for release
+build:
+    cargo build --release
 
-# === CHECK ===
+# Deploy the project
+deploy:
+    # Add deployment logic here (likely Terraform)
+    echo "Deploy with Terraform"
 
-# Run cargo check and clippy
+# Install dependencies
+install:
+    cargo fetch
+
+# Run linting and checks
 check:
     cargo check
     cargo clippy -- -D warnings
 
-# Check formatting without applying
-check-fmt:
-    cargo fmt -- --check
-
-# === RUN ===
-
-# Run the server locally
-run:
-    cargo run --bin crm-server
-
-# Run with auto-reload (requires cargo-watch)
-watch:
-    cargo watch -x 'run --bin crm-server'
-
-# === UTILITIES ===
-
-# Format code
-fmt:
-    cargo fmt
-
 # Clean build artifacts
 clean:
     cargo clean
-
-# Install dependencies (cargo fetch)
-install:
-    cargo fetch
-
-# Update dependencies
-update:
-    cargo update
-
-# Generate protobuf code
-proto:
-    cargo build --build-plan 2>/dev/null || true
-    @echo "Protobuf code generated via build.rs"
-
-# === DATABASE ===
-
-# Initialize the database schema
-db-init:
-    @echo "Initializing SurrealDB schema..."
-    surreal import --conn http://localhost:8000 --user root --pass root --ns crm --db crm schema/init.surql
-
-# === DOCKER ===
-
-# Build docker image
-docker-build:
-    docker build -t crm-backend:latest .
-
-# Run in docker
-docker-run:
-    docker run -p 3000:3000 --env-file .env crm-backend:latest
-
-# === RELEASE ===
-
-# Create a release build and copy to dist
-release:
-    cargo build --release
-    mkdir -p ../dist
-    cp target/release/crm-server ../dist/
